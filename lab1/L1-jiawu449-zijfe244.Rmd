@@ -11,7 +11,7 @@ knitr::opts_chunk$set(echo = TRUE,max.print=50)
 # install.packages("RMySQL")
 library(DBI)
 db <-dbConnect(RMySQL::MySQL(),host="localhost",
-               dbname="aaaa",user="root",password="Yet!0902107")
+               dbname="aaaa",user="root",password="23333")
 
 ```
 
