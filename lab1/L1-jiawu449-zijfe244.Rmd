@@ -1,0 +1,125 @@
+---
+title: "lab1 BDA"
+author: "Zijie Feng & Jiawei Wu"
+date: "2019-03-30"
+output: pdf_document
+---
+
+```{r setup, include=FALSE}
+rm(list=ls())
+knitr::opts_chunk$set(echo = TRUE,max.print=50)
+# install.packages("RMySQL")
+library(DBI)
+db <-dbConnect(RMySQL::MySQL(),host="localhost",
+               dbname="aaaa",user="root",password="Yet!0902107")
+
+```
+
+
+
+## 1) List all employees, i.e. all tuples in the jbemployee relation.
+
+```{sql, connection=db}
+select * from jbemployee;
+```
+
+## 2) List the name of all departments in alphabetical order. Note: by “name” we mean the name attribute for all tuples in the jbdept relation.
+
+```{sql connection=db}
+select name from jbdept order by name;
+```
+
+## 3) What parts are not in store, i.e. qoh = 0? (qoh = Quantity On Hand)
+
+```{sql connection=db}
+select name from jbparts where qoh=0;
+```
+
+
+## 4) Which employees have a salary between 9000 (included) and 10000 (included)?
+
+```{sql connection=db}
+select name from jbemployee where salary between 9000 and 10000;
+```
+
+## 5) What was the age of each employee when they started working (startyear)?
+
+```{sql connection=db}
+select name, (startyear-birthyear) from jbemployee;
+```
+
+
+## 6) Which employees have a last name ending with “son”?
+
+```{sql connection=db}
+select id,name from jbemployee where name like '%, %son %';
+```
+
+## 7) Which items (note items, not parts) have been delivered by a supplier called Fisher-Price? Formulate this query using a subquery in the where-clause.
+
+```{sql connection=db}
+select name from jbitem where supplier=all 
+(select id from jbsupplier where name='Fisher-Price');
+```
+
+## 8) Formulate the same query as above, but without a subquery.
+
+```{sql connection=db}
+select I.name from jbitem I, jbsupplier S 
+where S.name='Fisher-Price' and S.id=I.supplier;
+```
+
+## 9) Show all cities that have suppliers located in them. Formulate this query using a subquery in the where-clause.
+
+```{sql connection=db}
+select DISTINCT(c.name) from jbcity c, jbsupplier s where c.id=s.city;
+```
+
+## 10)What is the name and color of the parts that are heavier than a card reader? Formulate this query using a subquery in the where-clause. (The SQL query must not contain the weight as a constant.)
+
+```{sql connection=db}
+select name, color from jbparts 
+where weight > all (select weight from jbparts where name='card reader');
+```
+
+## 11) Formulate the same query as above, but without a subquery. (The query must not contain the weight as a constant.)
+
+```{sql connection=db}
+select p.name,p.color from jbparts p, jbparts b 
+where p.weight>b.weight and b.name='card reader';
+```
+
+## 12)What is the average weight of black parts?
+
+```{sql connection=db}
+select avg(weight) from jbparts where color='black';
+```
+
+## 13)What is the total weight of all parts that each supplier in Massachusetts (“Mass”) has delivered? Retrieve the name and the total weight for each of these suppliers. Do not forget to take the quantity of delivered parts into account. Note that one row should be returned for each supplier.
+
+```{sql connection=db}
+select s.name, sum(p.weight*d.quan)  from jbsupplier s,jbparts p,jbsupply d, jbcity c  
+where p.id=d.part  and d.supplier=s.id  and s.city=c.id  and c.state='mass' Group by s.name;
+```
+
+## 14) Create a new relation (a table), with the same attributes as the table items using the CREATE TABLE syntax where you define every attribute explicitly (i.e. not as a copy of another table). Then fill the table with all items that cost less than the average price for items. Remember to define primary and foreign keys in your table!
+
+```{sql connection=db}
+# create an empty table with headers
+create table jbinfo (id integer primary key, name varchar(25),
+dept integer ,price integer , qoh integer , supplier integer );
+```
+
+```{sql connection=db}
+insert into jbinfo (id, name, dept, price, qoh, supplier) 
+select id, name, dept, price, qoh, supplier from jbitem 
+where price<all (select avg(price) from jbitem);
+```
+```{sql connection=db}
+select * from jbinfo;
+```
+
+```{sql connection=db}
+drop table jbinfo;
+```
+
