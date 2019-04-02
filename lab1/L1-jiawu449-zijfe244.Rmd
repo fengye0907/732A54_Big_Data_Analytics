@@ -11,11 +11,9 @@ knitr::opts_chunk$set(echo = TRUE,max.print=50)
 # install.packages("RMySQL")
 library(DBI)
 db <-dbConnect(RMySQL::MySQL(),host="localhost",
-               dbname="aaaa",user="root",password="23333")
+               dbname="aaaa",user="root",password="2333")
 
 ```
-
-
 
 ## 1) List all employees, i.e. all tuples in the jbemployee relation.
 
@@ -52,13 +50,13 @@ select name, (startyear-birthyear) from jbemployee;
 ## 6) Which employees have a last name ending with “son”?
 
 ```{sql connection=db}
-select id,name from jbemployee where name like '%, %son %';
+select id,name from jbemployee where name like '%son,%';
 ```
 
 ## 7) Which items (note items, not parts) have been delivered by a supplier called Fisher-Price? Formulate this query using a subquery in the where-clause.
 
 ```{sql connection=db}
-select name from jbitem where supplier=all 
+select name from jbitem where supplier =
 (select id from jbsupplier where name='Fisher-Price');
 ```
 
@@ -72,14 +70,15 @@ where S.name='Fisher-Price' and S.id=I.supplier;
 ## 9) Show all cities that have suppliers located in them. Formulate this query using a subquery in the where-clause.
 
 ```{sql connection=db}
-select DISTINCT(c.name) from jbcity c, jbsupplier s where c.id=s.city;
+select DISTINCT(name) from jbcity
+where id in (select city from jbsupplier);
 ```
 
 ## 10)What is the name and color of the parts that are heavier than a card reader? Formulate this query using a subquery in the where-clause. (The SQL query must not contain the weight as a constant.)
 
 ```{sql connection=db}
 select name, color from jbparts 
-where weight > all (select weight from jbparts where name='card reader');
+where weight > (select weight from jbparts where name='card reader');
 ```
 
 ## 11) Formulate the same query as above, but without a subquery. (The query must not contain the weight as a constant.)
